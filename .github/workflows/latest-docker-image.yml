@@ -10,6 +10,18 @@ jobs:
     name: Build and push latest Docker image
     runs-on: ubuntu-latest
     steps:
+      - name: Fetch latest version information for linuxserver/tvheadend image
+        id: linuxserver_tvheadend
+        run: |
+          echo "::set-output name=version::$(skopeo inspect docker://docker.io/linuxserver/tvheadend:amd64-latest | jq -r '.Labels["org.opencontainers.image.version"]')"
+
+      - name: Fetch latest version information for tv_grab_fr_telerama
+        uses: rez0n/actions-github-release@v1.2
+        id: tv_grab_fr_telerama
+        env:
+          repository: zubrick/tv_grab_fr_telerama
+          type: stable
+
       - name: Checkout
         uses: actions/checkout@v2
 
@@ -24,4 +36,10 @@ jobs:
         with:
           context: .
           push: true
+          build-args: |
+            LINUXSERVER_TVHEADEND_VERSION=${{ steps.linuxserver_tvheadend.outputs.version }}
+            TV_GRAB_FR_TELERAMA_VERSION=${{ steps.tv_grab_fr_telerama.outputs.release }}
           tags: sdrik/tvheadend:latest
+          labels: |
+            LINUXSERVER_TVHEADEND_VERSION=${{ steps.linuxserver_tvheadend.outputs.version }}
+            TV_GRAB_FR_TELERAMA_VERSION=${{ steps.tv_grab_fr_telerama.outputs.release }}
